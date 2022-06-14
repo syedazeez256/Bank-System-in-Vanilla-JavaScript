@@ -77,7 +77,33 @@ const displayMovements = function (movements) {
   });
 };
 
-displayMovements(account1.movements);
+// Displaying summary
+const calcDisplaySummary = function (account) {
+  const incomes = account.movements
+    .filter(mov => mov > 0)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumIn.textContent = `${incomes}`;
+  const outcomes = account.movements
+    .filter(mov => mov < 0)
+    .reduce((acc, mov) => acc + mov, 0);
+  labelSumOut.textContent = `${Math.abs(outcomes)}`;
+  const interest = account.movements
+    .filter(mov => mov > 0)
+    .map(deposit => (deposit * account.interestRate) / 100)
+    .filter((int, i, arr) => {
+      return int >= 1;
+    })
+    .reduce((acc, int) => acc + int, 0);
+  labelSumInterest.textContent = `${Math.abs(interest)}`;
+};
+
+// Displaying balance
+const calcDisplayBalance = function (bal) {
+  const balance = bal.reduce(function (acc, val) {
+    return acc + val;
+  }, 0);
+  labelBalance.textContent = `${balance} EUR`;
+};
 
 const user = 'Syed Abdul Aziz';
 
@@ -94,40 +120,34 @@ const createUserName = function (accs) {
 createUserName(accounts);
 // console.log(accounts);
 
-const calcDisplayBalance = function (bal) {
-  const balance = bal.reduce(function (acc, val) {
-    return acc + val;
-  }, 0);
-  labelBalance.textContent = `${balance} EUR`;
-};
+let currentAccount;
 
-const calcDisplaySummary = function (movements) {
-  const incomes = movements
-    .filter(mov => mov > 0)
-    .reduce((acc, mov) => acc + mov, 0);
-  labelSumIn.textContent = `${incomes}`;
-  const outcomes = movements
-    .filter(mov => mov < 0)
-    .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = `${Math.abs(outcomes)}`;
-  const interest = movements
-    .filter(mov => mov > 0)
-    .map(deposit => (deposit * 1.2) / 100)
-    .filter((int, i, arr) => {
-      return int >= 1;
-    })
-    .reduce((acc, int) => acc + int, 0);
-  labelSumInterest.textContent = `${Math.abs(interest)}`;
-};
-console.log(calcDisplaySummary(account1.movements));
+// Login Functionality
 
-console.log(calcDisplayBalance(account1.movements));
+btnLogin.addEventListener('click', function (e) {
+  e.preventDefault();
+  currentAccount = accounts.find(
+    user => user.username === inputLoginUsername.value
+  );
+  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+    console.log('Login');
+    labelWelcome.textContent = `Welcome back, ${
+      currentAccount.owner.split(' ')[0]
+    }`;
+    containerApp.style.opacity = 100;
+  }
+  inputLoginUsername.value = inputLoginPin.value = '';
+  inputLoginPin.blur();
+  displayMovements(currentAccount.movements);
+  calcDisplayBalance(currentAccount.movements);
+  calcDisplaySummary(currentAccount);
+});
 
-const movements = [200, 450, -400, 700, -750, 250, -500];
+// const movements = [200, 450, -400, 700, -750, 250, -500];
 
-const eurtousd = 1.1;
-const totalDepositUSD = movements
-  .filter(mov => mov > 0)
-  .map(mov => mov * eurtousd)
-  .reduce((acc, val) => acc + val);
-console.log(totalDepositUSD);
+// const eurtousd = 1.1;
+// const totalDepositUSD = movements
+//   .filter(mov => mov > 0)
+//   .map(mov => mov * eurtousd)
+//   .reduce((acc, val) => acc + val);
+// console.log(totalDepositUSD);
