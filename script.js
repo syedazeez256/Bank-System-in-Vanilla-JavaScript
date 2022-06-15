@@ -62,9 +62,10 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMovements = function (movements) {
+const displayMovements = function (movements, sort = false) {
   containerMovements.innerHTML = '';
-  movements.forEach((mov, i) => {
+  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
+  movs.forEach((mov, i) => {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `
     <div class="movements__row">
@@ -99,10 +100,9 @@ const calcDisplaySummary = function (account) {
 
 // Displaying balance
 const calcDisplayBalance = function (bal) {
-  const balance = bal.reduce(function (acc, val) {
-    return acc + val;
-  }, 0);
-  labelBalance.textContent = `${balance} EUR`;
+  const balance = bal.movements.reduce((acc, val) => acc + val, 0);
+  bal.balance = balance;
+  labelBalance.textContent = `${bal.balance} EUR`;
 };
 
 const user = 'Syed Abdul Aziz';
@@ -119,6 +119,12 @@ const createUserName = function (accs) {
 
 createUserName(accounts);
 // console.log(accounts);
+
+const updateUI = function (currentAccount) {
+  displayMovements(currentAccount.movements);
+  calcDisplayBalance(currentAccount);
+  calcDisplaySummary(currentAccount);
+};
 
 let currentAccount;
 
@@ -138,12 +144,69 @@ btnLogin.addEventListener('click', function (e) {
   }
   inputLoginUsername.value = inputLoginPin.value = '';
   inputLoginPin.blur();
-  displayMovements(currentAccount.movements);
-  calcDisplayBalance(currentAccount.movements);
-  calcDisplaySummary(currentAccount);
+  updateUI(currentAccount);
 });
 
-// const movements = [200, 450, -400, 700, -750, 250, -500];
+// Transfering Amount
+btnTransfer.addEventListener('click', function (e) {
+  e.preventDefault();
+  const recieverAcc = accounts.find(
+    user => user.username === inputTransferTo.value
+  );
+  const amount = Number(inputTransferAmount.value);
+  inputTransferAmount.value = inputTransferTo.value = '';
+  if (
+    amount > 0 &&
+    recieverAcc &&
+    amount <= currentAccount.balance &&
+    recieverAcc?.username !== currentAccount.username
+  ) {
+    // console.log('Transfer Valid');
+    currentAccount.movements.push(-amount);
+    recieverAcc.movements.push(amount);
+
+    // Update UI
+    updateUI(currentAccount);
+  }
+});
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (
+    inputCloseUsername.value === currentAccount.username &&
+    Number(inputClosePin.value) === currentAccount.pin
+  ) {
+    const index = accounts.findIndex(
+      acc => acc.username === currentAccount.username
+    );
+
+    console.log(index);
+
+    const c = accounts.splice(index, 1);
+    console.log(c);
+    containerApp.style.opacity = 0;
+  }
+  inputCloseUsername.value = inputClosePin.value = '';
+});
+
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+  const amount = Number(inputLoanAmount.value);
+  if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
+    currentAccount.movements.push(amount);
+  }
+  updateUI(currentAccount);
+  inputLoanAmount.value = '';
+});
+let sorted = false;
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount.movements, !sorted);
+  sorted = !sorted;
+});
+
+const movements = [200, 450, -400, 700, -750, 250, -500];
 
 // const eurtousd = 1.1;
 // const totalDepositUSD = movements
@@ -151,3 +214,28 @@ btnLogin.addEventListener('click', function (e) {
 //   .map(mov => mov * eurtousd)
 //   .reduce((acc, val) => acc + val);
 // console.log(totalDepositUSD);
+// const ar = [1, 2, 3, 4, 5];
+// ar.splice(2, 1);
+// console.log(ar);
+
+// Some Every and includes method
+// console.log(movements);
+
+// console.log(movements.includes(-400));
+// console.log(movements.some(acc => acc === -400));
+// console.log(movements.every(acc => acc === -400));
+
+// const arr = [1, 2, [3, [4]], 5, [6, 7], 8];
+// console.log(arr.flat());
+
+// console.log(arr.flat(3));
+
+// const overAllBal = accounts
+//   .map(mov => mov.movements)
+//   .flat()
+//   .reduce((acc, mov) => acc + mov);
+// console.log(overAllBal);
+// const overAllBal2 = accounts
+//   .flatMap(mov => mov.movements)
+//   .reduce((acc, mov) => acc + mov);
+// console.log(overAllBal2);
